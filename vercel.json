@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "functions": {
+    "Backend/api/**/*.php": {
+      "runtime": "vercel-php@0.7.1"
+    },
+    "Backend/auth/*.php": {
+      "runtime": "vercel-php@0.7.1"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*).php",
+      "dest": "/Backend/api/$1.php"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/Backend/api/$1/index.php"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/Frontend/$1"
+    }
+  ]
+}

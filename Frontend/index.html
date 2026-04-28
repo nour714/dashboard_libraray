@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-t="title">مكتبة الدولة | نظام إدارة المكتبة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body>
+
+  <!-- ===== AUTH OVERLAY ===== -->
+  <div id="auth-overlay">
+    <div class="auth-bg"></div>
+    <div class="auth-card" id="auth-card">
+      <div class="auth-logo">
+        <div class="logo-icon">📚</div>
+        <h1 data-t="brand">مكتبة الدولي</h1>
+        <p data-t="title">نظام إدارة المكتبة الإلكترونية</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-t="login" onclick="switchAuthTab('login')">تسجيل الدخول</button>
+        <button class="auth-tab" data-t="register" onclick="switchAuthTab('register')">حساب جديد</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="tab-login">
+        <div class="form-group">
+          <label data-t="email">البريد الإلكتروني</label>
+          <input type="email" id="login-email" placeholder="example@email.com">
+        </div>
+        <div class="form-group">
+          <label data-t="password">كلمة المرور</label>
+          <input type="password" id="login-pass" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" data-t="login" onclick="doLogin()">تسجيل الدخول</button>
+        <div class="auth-divider" data-t="all">أو</div>
+        <div id="google-btn-login" style="display:flex; justify-content:center; width:100%; margin-top:10px"></div>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="tab-register" style="display:none">
+        <div class="form-group">
+          <label data-t="name">الاسم الكامل</label>
+          <input type="text" id="reg-name" placeholder="محمد أحمد">
+        </div>
+        <div class="form-group">
+          <label data-t="email">البريد الإلكتروني</label>
+          <input type="email" id="reg-email" placeholder="example@email.com">
+        </div>
+        <div class="form-group">
+          <label data-t="password">كلمة المرور</label>
+          <input type="password" id="reg-pass" placeholder="••••••••">
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label data-t="phone">رقم الهاتف</label>
+            <input type="tel" id="reg-phone" placeholder="01xxxxxxxxx">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label data-t="account_type">نوع الحساب</label>
+            <select id="reg-type">
+              <option value="USER" data-t="user">مستخدم</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:18px">
+          <label data-t="address">العنوان</label>
+          <input type="text" id="reg-address" placeholder="المدينة، الحي">
+        </div>
+        <button class="btn-primary" data-t="register" onclick="doRegister()">إنشاء الحساب</button>
+        <div class="auth-divider" data-t="all">أو</div>
+        <div id="google-btn-register" style="display:flex; justify-content:center; width:100%; margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ===== -->
+  <div id="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="logo-mark">د</div>
+          <span data-t="brand">مكتبة الدولة</span>
+        </div>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebar-avatar">م</div>
+        <div class="user-info">
+          <div class="name" id="sidebar-name">المستخدم</div>
+          <span class="role" id="sidebar-role">مستخدم</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <!-- يتم بناؤها ديناميكياً -->
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-logout" data-t="logout" onclick="doLogout()">🚪 تسجيل الخروج</button>
+      </div>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="icon-btn mobile-nav-toggle" id="sidebar-toggle" type="button" aria-label="فتح القائمة" aria-expanded="false" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topbar-title" data-t="dashboard">لوحة التحكم</div>
+      <div class="topbar-search">
+        <span>🔍</span>
+        <input type="text" id="global-search" data-t="search_placeholder" placeholder="ابحث عن كتاب، مستخدم، طلب..." onkeyup="globalSearch(this.value)">
+      </div>
+      <div class="topbar-actions">
+        <div class="icon-btn" data-t="settings" title="الإعدادات" onclick="navigate('profile')">⚙️</div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <!-- ===== DASHBOARD ===== -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card gold">
+            <div class="stat-icon gold">📚</div>
+            <div class="stat-number" id="stat-books">0</div>
+            <div class="stat-label" data-t="total_books">إجمالي الكتب</div>
+            <div class="stat-change up">↑ 12%</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-icon blue">👥</div>
+            <div class="stat-number" id="stat-users">0</div>
+            <div class="stat-label" data-t="total_users">إجمالي المستخدمين</div>
+            <div class="stat-change up">↑ 8%</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon green">🛒</div>
+            <div class="stat-number" id="stat-orders">0</div>
+            <div class="stat-label" data-t="total_orders">الطلبات الكلية</div>
+            <div class="stat-change up">↑ 23%</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon red">💰</div>
+            <div class="stat-number" id="stat-revenue">0</div>
+            <div class="stat-label" data-t="total_revenue">إجمالي الإيرادات (ج.م)</div>
+            <div class="stat-change up">↑ 15%</div>
+          </div>
+        </div>
+        <div class="dashboard-grid">
+          <div class="chart-card">
+            <div class="chart-title" data-t="monthly_orders">📊 الطلبات الشهرية</div>
+            <div class="bar-chart" id="monthly-chart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title" data-t="latest_activity">⚡ آخر النشاطات</div>
+            <div class="activity-list" id="activity-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== BOOKS ===== -->
+      <div class="page" id="page-books">
+        <div class="section-header">
+          <div>
+            <div class="section-title" data-t="manage_books">📚 إدارة الكتب</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn-outline" data-t="all" onclick="toggleView()">⊞ تبديل العرض</button>
+            <button class="btn-sm admin-only" data-t="add_book" onclick="openModal('modal-add-book')">+ إضافة كتاب</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <button class="filter-btn active" data-lang="all" data-t="all" onclick="filterBooks('all',this)">الكل</button>
+          <button class="filter-btn" data-lang="AR" data-t="arabic" onclick="filterBooks('AR',this)">عربي</button>
+          <button class="filter-btn" data-lang="EN" data-t="english" onclick="filterBooks('EN',this)">English</button>
+          <select class="select-filter" id="dept-filter" onchange="filterBooksByDept(this.value)">
+            <option value="" data-t="all_depts">كل الأقسام</option>
+          </select>
+        </div>
+
+        <div id="books-view-table">
+          <div class="table-container">
+            <div class="table-toolbar">
+              <div class="table-search">
+                <span>🔍</span>
+                <input type="text" id="books-search" data-t="books_search" placeholder="ابحث في الكتب..." onkeyup="searchBooks(this.value)">
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th data-t="books">الكتاب</th>
+                  <th data-t="departments">القسم</th>
+                  <th data-t="publisher">الناشر</th>
+                  <th data-t="pages">الصفحات</th>
+                  <th data-t="total">السعر</th>
+                  <th data-t="arabic">اللغة</th>
+                  <th data-t="all">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="books-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="books-view-grid" style="display:none">
+          <div class="books-grid" id="books-grid-body"></div>
+        </div>
+
+        <div class="pagination" id="books-pagination"></div>
+      </div>
+
+      <!-- ===== USERS ===== -->
+      <div class="page" id="page-users">
+        <div class="section-header">
+          <div>
+            <div class="section-title" data-t="users">👥 إدارة المستخدمين</div>
+          </div>
+          <button class="btn-sm" data-t="register" onclick="openModal('modal-add-user')">+ إضافة مستخدم</button>
+        </div>
+        <div class="table-container">
+          <div class="table-toolbar">
+            <div class="table-search">
+              <span>🔍</span>
+              <input type="text" id="users-search" data-t="users_search" placeholder="ابحث في المستخدمين..." onkeyup="searchUsers(this.value)">
+            </div>
+            <select class="select-filter" onchange="filterUsersByType(this.value)">
+              <option value="" data-t="all">الكل</option>
+              <option value="ADMIN" data-t="admin">مدير</option>
+              <option value="USER" data-t="user">مستخدم</option>
+            </select>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th data-t="name">المستخدم</th>
+                <th data-t="email">البريد</th>
+                <th data-t="account_type">النوع</th>
+                <th data-t="phone">الهاتف</th>
+                <th data-t="address">العنوان</th>
+                <th data-t="all">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="users-pagination"></div>
+      </div>
+
+      <!-- ===== DEPARTMENTS ===== -->
+      <div class="page" id="page-departments">
+        <div class="section-header">
+          <div>
+            <div class="section-title" data-t="departments">🏛️ الأقسام</div>
+          </div>
+          <button class="btn-sm" data-t="all" onclick="openModal('modal-add-dept')">+ قسم جديد</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th data-t="all">رقم القسم</th>
+                <th data-t="name">اسم القسم</th>
+                <th data-t="admin">المدير</th>
+                <th data-t="total_books">عدد الكتب</th>
+                <th data-t="all">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="depts-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== PUBLISHERS ===== -->
+      <div class="page" id="page-publishers">
+        <div class="section-header">
+          <div>
+            <div class="section-title" data-t="publishers">🏢 دور النشر</div>
+          </div>
+          <button class="btn-sm" data-t="all" onclick="openModal('modal-add-pub')">+ ناشر جديد</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th data-t="publisher">الناشر</th>
+                <th data-t="address">العنوان</th>
+                <th data-t="phone">الهاتف</th>
+                <th data-t="all">الموقع</th>
+                <th data-t="total_books">عدد الكتب</th>
+                <th data-t="all">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="pubs-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== AUTHORS ===== -->
+      <div class="page" id="page-authors">
+        <div class="section-header">
+          <div>
+            <div class="section-title" data-t="authors">✍️ المؤلفون</div>
+          </div>
+          <button class="btn-sm" data-t="all" onclick="openModal('modal-add-author')">+ مؤلف جديد</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th data-t="author">المؤلف</th>
+                <th data-t="books">الكتب</th>
+                <th data-t="all">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="authors-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== ORDERS ===== -->
+      <div class="page" id="page-orders">
+        <div class="section-header">
+          <div>
+            <div class="section-title" data-t="orders">🛒 الطلبات</div>
+          </div>
+          <button class="btn-sm" id="btn-new-order" data-t="new_order" onclick="openNewOrderModal()" style="display:none">+ طلب جديد</button>
+        </div>
+        <div class="table-toolbar order-toolbar">
+          <div class="table-search">
+            <span>🔍</span>
+            <input type="text" id="orders-search" data-t="orders_search" placeholder="ابحث في الطلبات..." onkeyup="searchOrders(this.value)">
+          </div>
+        </div>
+        <div id="orders-container"></div>
+      </div>
+
+      <!-- ===== PROFILE / SETTINGS ===== -->
+      <div class="page" id="page-profile">
+        <div class="section-header">
+          <div>
+            <div class="section-title" data-t="settings">⚙️ الإعدادات</div>
+            <div class="section-sub" data-t="all">إدارة إعدادات النظام والحساب</div>
+          </div>
+        </div>
+
+        <div class="settings-layout">
+
+          <!-- Card: General Settings -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">⚙️</span>
+              <div>
+                <div class="settings-card-title" data-t="settings">الإعدادات العامة</div>
+                <div class="settings-card-sub">إعدادات النظام الأساسية</div>
+              </div>
+            </div>
+
+            <!-- Dark Mode -->
+            <div class="settings-row">
+              <span class="settings-row-icon">🌙</span>
+              <div class="settings-row-info">
+                <div class="settings-row-title" data-t="change_theme">الوضع الليلي</div>
+                <div class="settings-row-sub">استخدام المظهر الداكن للواجهة</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="dark-mode-toggle" onchange="toggleTheme()" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <!-- Language -->
+            <div class="settings-row">
+              <span class="settings-row-icon">🌐</span>
+              <div class="settings-row-info">
+                <div class="settings-row-title" data-t="arabic">اللغة</div>
+                <div class="settings-row-sub">اختر لغة الواجهة المفضلة</div>
+              </div>
+              <div class="settings-select-group">
+                <button class="lang-pill" id="pill-ar" onclick="updateLanguage('ar')">🇸🇦 عربي</button>
+                <button class="lang-pill" id="pill-en" onclick="updateLanguage('en')">🇺🇸 English</button>
+              </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="settings-row">
+              <span class="settings-row-icon">🔔</span>
+              <div class="settings-row-info">
+                <div class="settings-row-title" data-t="notifications">الإشعارات</div>
+                <div class="settings-row-sub">استقبال التنبيهات الفورية</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notif-toggle" onchange="showToast('🔔 ' + t('notifications'))" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Card: Account Info -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">👤</span>
+              <div>
+                <div class="settings-card-title" data-t="profile">معلومات الحساب</div>
+                <div class="settings-card-sub">تعديل بيانات ملفك الشخصي</div>
+              </div>
+            </div>
+
+            <!-- Avatar + Name -->
+            <div class="settings-profile-hero">
+              <div class="profile-avatar" id="profile-avatar">م</div>
+              <div>
+                <div class="profile-name" id="profile-name">-</div>
+                <div class="profile-email" id="profile-email">-</div>
+                <span class="role badge-gold" id="profile-role">-</span>
+              </div>
+            </div>
+
+            <div class="settings-form-grid">
+              <div class="form-group">
+                <label data-t="name">الاسم الكامل</label>
+                <input type="text" id="pf-name">
+              </div>
+              <div class="form-group">
+                <label data-t="email">البريد الإلكتروني</label>
+                <input type="email" id="pf-email">
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Security -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">🔒</span>
+              <div>
+                <div class="settings-card-title" data-t="password">الأمان والحماية</div>
+                <div class="settings-card-sub">تغيير كلمة المرور</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label data-t="password">كلمة المرور الجديدة</label>
+              <input type="password" id="pf-pass" placeholder="أدخل كلمة مرور جديدة">
+            </div>
+          </div>
+
+          <!-- Card: Contact (users only) -->
+          <div class="settings-card" id="customer-fields">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">📍</span>
+              <div>
+                <div class="settings-card-title" data-t="address">تفاصيل التواصل</div>
+                <div class="settings-card-sub">بيانات التواصل والعنوان</div>
+              </div>
+            </div>
+            <div class="settings-form-grid">
+              <div class="form-group">
+                <label data-t="phone">رقم الهاتف</label>
+                <input type="tel" id="pf-phone">
+              </div>
+              <div class="form-group">
+                <label data-t="address">العنوان</label>
+                <input type="text" id="pf-address">
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <button class="btn-primary settings-save-btn" data-t="save_changes" onclick="saveProfile()">💾 حفظ التغييرات</button>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+
+  <div class="modal-overlay" id="modal-add-user">
+    <div class="modal" style="width:500px">
+      <div class="modal-header">
+        <div class="modal-title" data-t="register">👤 إضافة مستخدم</div>
+        <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
+      </div>
+      <div class="form-group"><label data-t="name">الاسم</label><input type="text" id="u-name"></div>
+      <div class="form-row">
+        <div class="form-group"><label data-t="email">البريد</label><input type="email" id="u-email"></div>
+        <div class="form-group"><label data-t="password">كلمة المرور</label><input type="password" id="u-pass"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label data-t="account_type">النوع</label>
+          <select id="u-type">
+            <option value="USER" data-t="user">مستخدم</option>
+            <option value="ADMIN" data-t="admin">مدير</option>
+          </select>
+        </div>
+        <div class="form-group"><label data-t="phone">الهاتف</label><input type="tel" id="u-phone"></div>
+      </div>
+      <div class="form-group"><label data-t="address">العنوان</label><input type="text" id="u-address"></div>
+      <button class="btn-primary" data-t="save" onclick="addUser()">✅ حفظ</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-add-dept">
+    <div class="modal" style="width:400px">
+      <div class="modal-header">
+        <div class="modal-title" data-t="departments">🏛️ إضافة قسم</div>
+        <button class="modal-close" onclick="closeModal('modal-add-dept')">✕</button>
+      </div>
+      <div class="form-group"><label data-t="name">اسم القسم</label><input type="text" id="d-name"></div>
+      <button class="btn-primary" data-t="save" onclick="addDept()">✅ حفظ</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-add-pub">
+    <div class="modal" style="width:500px">
+      <div class="modal-header">
+        <div class="modal-title" data-t="publisher">🏢 إضافة ناشر</div>
+        <button class="modal-close" onclick="closeModal('modal-add-pub')">✕</button>
+      </div>
+      <div class="form-group"><label data-t="publisher">الاسم</label><input type="text" id="p-name"></div>
+      <div class="form-row">
+        <div class="form-group"><label data-t="address">العنوان</label><input type="text" id="p-addr"></div>
+        <div class="form-group"><label data-t="phone">الهاتف</label><input type="tel" id="p-phone"></div>
+      </div>
+      <div class="form-group"><label data-t="all">الموقع</label><input type="text" id="p-web"></div>
+      <button class="btn-primary" data-t="save" onclick="addPublisher()">✅ حفظ</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-add-author">
+    <div class="modal" style="width:400px">
+      <div class="modal-header">
+        <div class="modal-title" data-t="author">✍️ إضافة مؤلف</div>
+        <button class="modal-close" onclick="closeModal('modal-add-author')">✕</button>
+      </div>
+      <div class="form-group"><label data-t="name">الاسم الأول</label><input type="text" id="a-first"></div>
+      <div class="form-group"><label data-t="name">اسم العائلة</label><input type="text" id="a-last"></div>
+      <button class="btn-primary" data-t="save" onclick="addAuthor()">✅ حفظ</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-add-book">
+    <div class="modal" style="width:560px">
+      <div class="modal-header">
+        <div class="modal-title" data-t="add_book">📚 إضافة كتاب جديد</div>
+        <button class="modal-close" onclick="closeModal('modal-add-book')">✕</button>
+      </div>
+      <div class="form-group"><label data-t="name">عنوان الكتاب</label><input type="text" id="bk-title"></div>
+      <div class="form-row">
+        <div class="form-group"><label data-t="pages">عدد الصفحات</label><input type="number" id="bk-pages"></div>
+        <div class="form-group"><label data-t="total">السعر</label><input type="number" id="bk-price" step="0.01"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label data-t="arabic">اللغة</label>
+          <select id="bk-lang">
+            <option value="AR" data-t="arabic">Arabic</option>
+            <option value="EN" data-t="english">English</option>
+          </select>
+        </div>
+        <div class="form-group"><label data-t="departments">القسم</label><select id="bk-dept"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label data-t="publisher">الناشر</label><select id="bk-pub"></select></div>
+        <div class="form-group"><label data-t="author">المؤلف</label><select id="bk-author"></select></div>
+      </div>
+      <button class="btn-primary" data-t="save" onclick="addBook()">✅ حفظ</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-book-detail">
+    <div class="modal" style="width:600px">
+      <div class="modal-header">
+        <div class="modal-title" id="detail-title">📖 تفاصيل الكتاب</div>
+        <button class="modal-close" onclick="closeModal('modal-book-detail')">✕</button>
+      </div>
+      <div id="book-detail-content"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-new-order">
+    <div class="modal" style="width:560px">
+      <div class="modal-header">
+        <div class="modal-title" data-t="new_order">🛒 طلب جديد</div>
+        <button class="modal-close" onclick="closeModal('modal-new-order')">✕</button>
+      </div>
+      <div class="form-group"><label data-t="books">اختر الكتاب</label><select id="o-book"></select></div>
+      <div class="form-row">
+        <div class="form-group"><label data-t="quantity">الكمية</label><input type="number" id="o-qty" value="1" min="1"></div>
+        <div class="form-group"><label data-t="delivery_address">عنوان التوصيل</label><input type="text" id="o-addr"></div>
+      </div>
+      <div class="order-summary-box">
+        <div class="summary-item"><span data-t="unit_price">السعر:</span><span id="o-unit-price">-</span></div>
+        <div class="summary-item total"><span data-t="total">الإجمالي:</span><span id="o-total">-</span></div>
+      </div>
+      <button class="btn-primary" data-t="confirm_order" onclick="placeOrder()">✅ تأكيد</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="api.js"></script>
+  <script src="script.js"></script>
+  <script>
+    // Initialize language on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedLang = localStorage.getItem('library_lang') || 'ar';
+      updateLanguage(savedLang);
+    });
+  </script>
+</body>
+
+</html>
